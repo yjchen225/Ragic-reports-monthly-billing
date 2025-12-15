@@ -3,9 +3,10 @@ import { Upload, FileText, AlertCircle, Printer, Calculator, Calendar } from 'lu
 
 /**
  * 月結請款單總表生成器
- * V1.7 修正版
- * - 移除 colgroup 內的註解以解決 DOM Nesting 警告
- * - V1.6 功能維持不變：新增「付款備註」(w-36)，調整日期寬度 (w-22)
+ * V1.8 優化版
+ * - 移除「簽核日期」欄位
+ * - 調整欄位順序：銷貨單 -> 付款編號 -> 出貨日期 -> 付款金額 -> 付款備註
+ * - 優化欄位寬度配置，備註欄位自動填滿
  */
 
 // ----------------------------------------------------------------------
@@ -113,9 +114,9 @@ export default function App() {
   const salesInputRef = useRef(null);
   const rmaInputRef = useRef(null);
 
-  // 更新：加入「付款備註」
+  // V1.8 更新：移除「銷貨單簽核日期」，保留「付款備註」
   const SALES_REQUIRED_COLUMNS = [
-    '客戶編號', '客戶姓名', '銷貨單編號', '付款編號', '付款金額', '總公司名稱', '出貨日期', '銷貨單簽核日期', '付款備註'
+    '客戶編號', '客戶姓名', '銷貨單編號', '付款編號', '付款金額', '總公司名稱', '出貨日期', '付款備註'
   ];
   const RMA_REQUIRED_COLUMNS = [
     '客戶編號', '客戶姓名', '總公司名稱', '退換貨單號', '退換貨金額合計', '退換貨單備註'
@@ -321,7 +322,7 @@ export default function App() {
                 <div className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${salesFile ? 'border-green-500 bg-green-50' : 'border-gray-300 hover:border-blue-400'}`}>
                   <FileText className={`w-10 h-10 mx-auto mb-2 ${salesFile ? 'text-green-600' : 'text-gray-400'}`} />
                   <h3 className="font-medium text-gray-900">銷貨單付款明細</h3>
-                  <p className="text-xs text-gray-500 mb-4">包含欄位：付款編號、付款備註、銷貨單編號、簽核日期...</p>
+                  <p className="text-xs text-gray-500 mb-4">包含欄位：付款編號、付款備註、銷貨單編號...</p>
                   <input
                     type="file"
                     accept=".xlsx, .xls"
@@ -434,19 +435,17 @@ export default function App() {
                           <colgroup>
                             <col className="w-36" />
                             <col className="w-36" />
-                            <col className="w-22" />
-                            <col className="w-22" />
-                            <col className="w-36" />
+                            <col className="w-24" />
+                            <col className="w-28" />
                             <col className="w-auto" />
                           </colgroup>
                           <thead className="bg-gray-50 text-gray-700 font-semibold border-b border-gray-300">
                             <tr>
                               <th className="px-1.5 py-1 border-r border-gray-300">銷貨單編號</th>
                               <th className="px-1.5 py-1 border-r border-gray-300">付款編號</th>
-                              <th className="px-1.5 py-1 border-r border-gray-300">簽核日期</th>
                               <th className="px-1.5 py-1 border-r border-gray-300">出貨日期</th>
-                              <th className="px-1.5 py-1 border-r border-gray-300">付款備註</th>
-                              <th className="px-1.5 py-1 text-right">付款金額</th>
+                              <th className="px-1.5 py-1 border-r border-gray-300 text-right">付款金額</th>
+                              <th className="px-1.5 py-1 text-left">付款備註</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -459,23 +458,21 @@ export default function App() {
                                   </td>
                                   <td className="px-1.5 py-1 border-r border-gray-300 align-top break-words">{row['付款編號']}</td>
                                   <td className="px-1.5 py-1 border-r border-gray-300 align-top break-words">
-                                    {showSO ? formatExcelDate(row['銷貨單簽核日期']) : ''}
-                                  </td>
-                                  <td className="px-1.5 py-1 border-r border-gray-300 align-top break-words">
                                     {showSO ? formatExcelDate(row['出貨日期']) : ''}
                                   </td>
-                                  <td className="px-1.5 py-1 border-r border-gray-300 align-top break-words">
+                                  <td className="px-1.5 py-1 border-r border-gray-300 text-right align-top break-words">{formatCurrency(row['付款金額'])}</td>
+                                  <td className="px-1.5 py-1 text-left align-top break-words">
                                     {row['付款備註']}
                                   </td>
-                                  <td className="px-1.5 py-1 text-right align-top break-words">{formatCurrency(row['付款金額'])}</td>
                                 </tr>
                               );
                             })}
                           </tbody>
                           <tfoot>
                              <tr className="bg-gray-50 font-bold border-t-2 border-gray-300">
-                               <td colSpan={5} className="px-1.5 py-1 text-right">銷貨付款小計：</td>
+                               <td colSpan={3} className="px-1.5 py-1 text-right">銷貨付款小計：</td>
                                <td className="px-1.5 py-1 text-right">{formatCurrency(customer.subtotalA)}</td>
+                               <td></td>
                              </tr>
                           </tfoot>
                         </table>
